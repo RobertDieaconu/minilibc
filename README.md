@@ -1,34 +1,34 @@
 # minilibc
 
-A minimal C standard library (`libc.a`) implemented from scratch for **x86-64 Linux**. Built without any host libc (`-nostdinc -fno-builtin`), this project re-implements the C runtime, syscall interface, memory management, string operations, I/O, and process management directly on top of Linux syscalls.
+O bibliotecă standard C minimală (`libc.a`) implementată de la zero pentru **Linux x86-64**. Construită fără nicio libc gazdă (`-nostdinc -fno-builtin`), acest proiect reimplementează runtime-ul C, interfața de apeluri de sistem, gestionarea memoriei, operațiile pe șiruri, I/O și gestionarea proceselor direct peste apelurile de sistem Linux.
 
-> Syscall architecture adapted from [Musl libc](https://musl.libc.org/) (BSD-3-Clause).
+> Arhitectura syscall adaptată din [Musl libc](https://musl.libc.org/) (BSD-3-Clause).
 
 ---
 
-## Features
+## Funcționalități
 
-- **Custom ELF entry point** — `_start` in NASM assembly, calls into `__libc_start_main`
-- **Direct syscall interface** — inline `syscall` instruction via `__syscall()` for all operations
-- **Memory management** — `mmap`/`mremap`/`munmap` wrappers; `malloc`/`free`/`calloc`/`realloc`/`reallocarray` backed by a doubly-linked allocation list
-- **String library** — `strcpy`, `strncpy`, `strcat`, `strncat`, `strcmp`, `strncmp`, `strlen`, `strchr`, `strrchr`, `strstr`, `strrstr`, `memcpy`, `memmove`, `memcmp`, `memset`
+- **Punct de intrare ELF personalizat** — `_start` scris în assembly NASM, apelează `__libc_start_main`
+- **Interfață directă de syscall** — instrucțiunea `syscall` inline prin `__syscall()` pentru toate operațiunile
+- **Gestionarea memoriei** — wrappere pentru `mmap`/`mremap`/`munmap`; `malloc`/`free`/`calloc`/`realloc`/`reallocarray` bazate pe o listă dublu înlănțuită de alocări
+- **Bibliotecă de șiruri** — `strcpy`, `strncpy`, `strcat`, `strncat`, `strcmp`, `strncmp`, `strlen`, `strchr`, `strrchr`, `strstr`, `strrstr`, `memcpy`, `memmove`, `memcmp`, `memset`
 - **I/O** — `open`, `close`, `read`, `write`, `lseek`, `truncate`, `ftruncate`, `puts`
-- **File stat** — `stat`, `fstat`, `fstatat`
-- **Process** — `exit`, `sleep`, `nanosleep`
-- **errno** — global `errno` variable with all standard POSIX error codes
+- **Stat fișiere** — `stat`, `fstat`, `fstatat`
+- **Procese** — `exit`, `sleep`, `nanosleep`
+- **errno** — variabila globală `errno` cu toate codurile de eroare POSIX standard
 
 ---
 
-## Project Structure
+## Structura proiectului
 
 ```
 .
 ├── Makefile
-├── errno.c                          # errno variable + POSIX error codes
-├── syscall.c                        # Variadic syscall() wrapper
+├── errno.c                          # variabila errno + coduri de eroare POSIX
+├── syscall.c                        # wrapper variadic syscall()
 ├── crt/
-│   ├── start.asm                    # ELF _start entry point
-│   └── __libc_start_main.c          # Initializes heap, calls main, cleanup
+│   ├── start.asm                    # punct de intrare ELF _start
+│   └── __libc_start_main.c          # inițializează heap-ul, apelează main, curăță
 ├── include/
 │   ├── errno.h
 │   ├── fcntl.h
@@ -40,7 +40,7 @@ A minimal C standard library (`libc.a`) implemented from scratch for **x86-64 Li
 │   ├── internal/
 │   │   ├── arch/x86_64/
 │   │   │   ├── syscall_arch.h       # __syscall() inline asm
-│   │   │   └── syscall_list.h       # All __NR_* syscall numbers (0–332)
+│   │   │   └── syscall_list.h       # toate numerele de syscall __NR_* (0–332)
 │   │   ├── mm/mem_list.h
 │   │   ├── essentials.h / io.h / syscall.h / types.h
 ├── io/
@@ -51,7 +51,7 @@ A minimal C standard library (`libc.a`) implemented from scratch for **x86-64 Li
 ├── mm/
 │   ├── mmap.c                       # mmap / mremap / munmap
 │   ├── malloc.c                     # malloc / free / calloc / realloc
-│   └── mem_list.c                   # Allocation tracking linked list
+│   └── mem_list.c                   # listă înlănțuită pentru urmărirea alocărilor
 ├── process/
 │   ├── exit.c
 │   ├── nanosleep.c
@@ -64,29 +64,29 @@ A minimal C standard library (`libc.a`) implemented from scratch for **x86-64 Li
 
 ---
 
-## Requirements
+## Cerințe
 
-- **GCC** (x86-64 Linux)
+- **GCC** (Linux x86-64)
 - **NASM** assembler
 - **GNU Make** + **ar**
 
 ---
 
-## Build
+## Compilare
 
 ```bash
 make
 ```
 
-This produces `libc.a` — a static archive containing all compiled objects plus the CRT startup object `crt/start.o`.
+Aceasta generează `libc.a` — o arhivă statică ce conține toate obiectele compilate plus obiectul de pornire CRT `crt/start.o`.
 
-To clean build artifacts:
+Pentru a șterge fișierele generate:
 
 ```bash
 make clean
 ```
 
-To package the source into a zip archive:
+Pentru a arhiva sursele într-un fișier zip:
 
 ```bash
 make pack
@@ -94,38 +94,38 @@ make pack
 
 ---
 
-## Usage
+## Utilizare
 
-Link your program against this library instead of the system libc:
+Leagă programul tău de această bibliotecă în loc de libc-ul sistemului:
 
 ```bash
-gcc -nostdinc -nostdlib -Ipath/to/include your_program.c libc.a -o your_program
+gcc -nostdinc -nostdlib -Ipath/to/include program.c libc.a -o program
 ```
 
 ---
 
-## Implementation Notes
+## Note de implementare
 
-### Syscall Interface
+### Interfața syscall
 
-All system calls go through the architecture-specific `__syscall()` function defined in `include/internal/arch/x86_64/syscall_arch.h`, which uses inline assembly to invoke the `syscall` instruction directly:
+Toate apelurile de sistem trec prin funcția `__syscall()` specifică arhitecturii, definită în `include/internal/arch/x86_64/syscall_arch.h`, care folosește assembly inline pentru a invoca direct instrucțiunea `syscall`:
 
 ```c
 static inline long __syscall(long n, long a1, long a2, long a3, long a4, long a5, long a6);
 ```
 
-The public variadic `syscall()` function in `syscall.c` wraps `__syscall()` for general use.
+Funcția publică variadică `syscall()` din `syscall.c` este un wrapper peste `__syscall()` pentru uz general.
 
-### Memory Allocator
+### Alocatorul de memorie
 
-The allocator (`mm/malloc.c`) uses `mmap` to obtain memory from the OS. All live allocations are tracked in a doubly-linked list (`mm/mem_list.c`) that is initialized at program startup and cleaned up at exit via `__libc_start_main`.
+Alocatorul (`mm/malloc.c`) folosește `mmap` pentru a obține memorie de la sistemul de operare. Toate alocările active sunt urmărite într-o listă dublu înlănțuită (`mm/mem_list.c`) care este inițializată la pornirea programului și curățată la ieșire prin `__libc_start_main`.
 
-### CRT Startup
+### Pornirea CRT
 
-Program execution begins at `_start` (`crt/start.asm`), which calls `__libc_start_main` with a pointer to `main`. The `__libc_start_main` function initializes the memory allocator, invokes `main`, performs cleanup, and returns the exit code to `_start`, which then calls `exit`.
+Execuția programului începe la `_start` (`crt/start.asm`), care apelează `__libc_start_main` cu un pointer către `main`. Funcția `__libc_start_main` inițializează alocatorul de memorie, invocă `main`, efectuează curățarea și returnează codul de ieșire către `_start`, care apelează apoi `exit`.
 
 ---
 
-## License
+## Licență
 
-BSD-3-Clause. Syscall architecture code adapted from [Musl libc](https://musl.libc.org/).
+BSD-3-Clause. Codul arhitecturii syscall adaptat din [Musl libc](https://musl.libc.org/).
